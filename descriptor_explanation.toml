@@ -1,0 +1,69 @@
+# Is is an example file to demonstrate all the keys available do
+# not use it for an actual analysis. Use the other examples from the 'sampleDescription' folder instead
+[dataset]
+# The dataset section defines the name of the adhesion profile.
+name = "example"
+
+[substrate]
+# In this section, please describe the substrate properties (Young's modulus in Pa and Poisson ratio)
+E = 10000.0 # 10 kPa
+nu = 0.45
+
+[image]
+# This sections, describes the sampling rates of the simulated images.
+micronsPerPixel=0.1 # µm
+layerDistance=0.5
+
+[meshsizetest]
+# This section is only used by the meshsizetest and describes the image sizes used
+xyPixMin = 256
+xyPixMax = 1024
+
+[simulation]
+# This section describes the extent of the image
+numberOfLayers= 32
+xyPix = 512
+
+# You can compose you traction profile by specifiying multiple adhesion components. The final
+# profile will be a superposition of all the components specified. Different components can be
+# freely named, the name is just for your convinicene and doesn't affect the generated profile.
+# Make sure to give a unique name to all components.
+
+# To correctly use the force profile with FTTC you must ensure that all internal forces are balanced.
+# For correctly calculating the DTMA/DTMB/SNR/DMA metrics, make sure that the normal
+# component is zero and the forces don't overlap
+
+# There are two different types
+
+[adheasion.indent] # Second part of the name can be choosen freely e.g. [adheasion.pressurecomp]
+# This adhesion describes a normal herz like contract
+type = "indentor"
+F = 10 # 10 µN Force transmitted by the contrate dorce outside
+F_unit = "µN" # Set the unit of force used (if ommited µN is assumed)
+a = 20   # µm size of contract area
+pos = [25,10] # Offset between the contract center and the origin
+
+[adheasion.sampleb]
+# This adhesion descirbes a dipole of two tangential Hertz like contracts
+type = "dipole"
+F = 10 # 10 µN Total traction force per adheasion site
+d = 20  # 20 µm Distance between the two counteracting adheasion sites
+phi = 90 # Orientation of the dipol vector relative to the positive x axis
+a = 8   #  8 µm Size of adheasion site
+pos = [0,0] # Center of mass between the two dipoles
+
+[adheasion.adhesion]
+# This adhesion descirbes a single Hertz like tangential adhesion
+# Always make sure to have an overall force balance in x and y direction between all adhesions in the system
+type = "point"
+F = 10 # 10 µN Total traction force per adheasion site
+phi = 90 # Orientation of the dipol vector relative to the positive x axis
+a = 8   #  8 µm Size of adheasion site
+pos = [10,20] # Center position of the adhesion site
+
+[adheasion.hertzcerruti]
+# This adhesion descirbes a single Hertz like contract with tangential and normal traction contributions
+type = "point"
+F = [10, 10, 3] # µN Vector describing the total force of this adhesion in x/y/z direction
+a = 8   #  8 µm Size of adheasion site
+pos = [20,10] # Center position of the adhesion site

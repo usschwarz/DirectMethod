@@ -1,0 +1,23 @@
+# This describes the situation with 2 adheasion sites
+[dataset]
+name = "hertzDipole"
+
+[substrate]
+E = 10000.0 # = 10 kPa
+nu = 0.45
+
+[image]
+micronsPerPixel=0.1 # µm
+layerDistance=0.5
+
+[simulation]
+numberOfLayers= 32
+xyPix = 512
+
+[adheasion.dipole]
+type = "dipole"
+F = 0.01 # 0.01 µN Total force per adheasion site
+d = 20  # 20 µm Distance between counteracting adheasion sites
+phi = 45 # 45 degree angle
+a = 2   # µm radius of adheasion site
+pos = [0,0] # Dipole center (µm,µm)

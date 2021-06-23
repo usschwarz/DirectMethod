@@ -1,0 +1,24 @@
+# This describes the simple Hertz indentor
+[dataset]
+name = "hertzIndentor"
+
+[substrate]
+E = 10.0 # = 10 kPa
+E_unit = "kPa"
+nu = 0.45
+
+[image]
+micronsPerPixel=0.1 # µm
+layerDistance=0.25
+
+[simulation]
+# This information
+numberOfLayers= 80
+xyPix = 1024
+
+[adheasion.hertzIndentor]
+type = "indentor"
+F = 10 # µN Total force per adheasion site
+F_unit = "µN"
+a = 20  # 20 µm Distance between counteracting adheasion sites
+pos = [0,0] # Dipole center (µm,µm)

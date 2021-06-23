@@ -1,0 +1,74 @@
+#########################################################################
+# Comparison of FTTC and 3D direct method TFM                           #
+# Code written by Johannes Blumberg, Heidelberg University              #
+#########################################################################
+
+
+This bundle contains software to study different methods for traction force microscopy on a 2D planar substrate:
+ 1) simulate deformation fields similar to the ones observed for a cell on a substrate with variable noise levels
+ 2) different algorithms to perform traction force microscopy when the displacement field is given
+ 3) analysis scripts that automate steps 1 and 2 and evaluate the performance of different algorithms
+
+To get started prepare an empty directory and create a file named 'description.toml', that describes the force profile.
+The 'descriptor_explanation.toml' file describes the required structure. To use one of the examples, copy a file from the
+'sampleDescriptors' folder to your newly created directory and rename it to 'description.toml'.
+
+Requirements:
+The following python packages must be installed in order to run this program.
+
+    package             tested version
+    ----------------------------------
+    matplotlib          3.3.2
+    matplotlib-scalebar 0.6.2
+    numba               0.51.2
+    numpy               1.19.4
+    scipy               1.5.4
+    toml                0.10.2
+
+NOTE:
+All scripts require the 'description.toml' file to be set up before execution. Make sure to add this folder to you
+execution path or call all scripts with their correct prefixes.
+
+Scripts:
+geninput.py sim <noise> <outfile.npz>
+    Generate simulated deformation data in an .npz file, which can be used by the other scripts.
+        <noise> - Noise level of the simulated profile
+    <outfile.npz> a file named outfile.npz to store the simulated data.
+
+runtfm <TFM method> path deffield.npz
+    Calculate and plot traction forces for the deformation profile
+
+normalProfileAnalysis.py gen/calc/plot/all
+    Analyses the effect of noise on different TFM strategies using the analysis for normal profiles
+    gen  - generate a subfolder 'noised' containing deformation data with different noise levels from 'description.toml'
+    calc - calculate traction fields and extract metrics for all noise levels
+    plot - create plots of the different metrics
+    all  - Perform all of the above in a single run
+
+pointProfileAnalysis.py gen/calc/plot/all
+    Analyses the effect of noise on different TFM strategies using the analysis for point like tangential profiles.
+    'description.toml' should specify a profil consisting only of non-overlapping tangential adhesions
+    gen  - generate a subfolder 'noised' containing deformation data with different noise levels from 'description.toml'
+    calc - calculate traction fields and extract metrics for all noise levels
+    plot - create plots of the different metrics
+    all  - Perform all of the above in a single run
+
+meshsizetest.py gen/calc/plot/all
+    Analyses the effect of changing the mesh size using the analysis for point like tangential profiles.
+    gen  - generate deformation data with different mesh sizes using 'description.toml'
+    calc - calculate traction fields and extract metrics for all mesh sizes
+    plot - create plots of the different metrics
+    all  - Perform all of the above in a single run
+
+convergence_test.py see below
+    Tests the convergence of the divergence removal scheme
+
+    dcsConvergenceTest.py <file1.npz> <file2.npz> ...
+        Analyzes the effects of divergence removal in relation to the number of iterations for deformation profiles
+        "file1.npz" "file2.npz" ... and stores the results in "convergence_test.pickle"
+
+    dcsConvergenceTest.py
+        If a "convergence_test.pickle" file exists, plot the results
+
+The gcv algorithm (TFM/FTTC/gcv.py and TFM/FTTC/gcv.py) is based on the Matlab scripts "regtools" by Hansen
+(P. C. Hansen, Regularization Tools Version 4.0 for Matlab 7.3, Numerical Algorithms, 46 (2007), pp. 189-194).
