@@ -3,20 +3,26 @@
 name = "hertzDipole"
 
 [substrate]
-E = 10000.0 # = 10 kPa
+E = 10000.0 # 10 kPa
 nu = 0.45
 
 [image]
-micronsPerPixel=0.1 # µm
-layerDistance=0.5
+spacing_xy = 0.8 # µm
+spacing_z = 4.0 # µm
+
+# micronsPerPixel=0.1 # µm
+# layerDistance=0.5 # µm
 
 [simulation]
-numberOfLayers= 32
-xyPix = 512
+n_points_xy = 64
+n_points_z = 4
+
+# numberOfLayers= 32
+# xyPix = 512
 
 [adheasion.left]
 type = "dipole"
-F = 0.01 # 10 µN Total force per adheasion site
+F = 0.02 # 20 µN Total force per adheasion site
 d = 20  # 20 µm Distance between counteracting adheasion sites
 phi = 130 # degrees angle
 a = 2   #  µm Radius of adheasion site
@@ -24,7 +30,7 @@ pos = [0,0]
 
 [adheasion.middle]
 type = "dipole"
-F = 0.01 # 10 µN Total force per adheasion site
+F = 0.005 # 5 µN Total force per adheasion site
 d = 20  # 20 µm Distance between counteracting adheasion sites
 phi = 90 # degrees angle
 a = 2   #  µm Radius of adheasion site
@@ -35,5 +41,5 @@ type = "dipole"
 F = 0.01 # 10 µN Total force per adheasion site
 d = 20  # 20 µm Distance between counteracting adheasion sites
 phi = 50 # degrees angle
-a = 2   #  µm Radius of adheasion site
+a = 2   # µm Radius of adheasion site
 pos = [0,0]

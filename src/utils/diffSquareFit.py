@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Mon Jan 24 17:00:00 2020
+Fit points using a linear sheme
 
 @author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
 """

@@ -48,7 +48,7 @@ from autograd import grad, elementwise_grad as egrad
 
 
 def csqrt(z):
-    """ Implementation of complex square root function that works with autograd """"
+    """ Implementation of complex square root function that works with autograd """
     r = np.absolute(z)
     re = np.real(z)
     im = np.imag(z)

@@ -1,11 +1,18 @@
-# This file implements the different methods to calculate TFM from the input filed.
+"""
+This file implements the different methods to calculate TFM from the input filed.
 
-# All function take the u-field object definied in uFieldType as their input
-# An return:
-# (x,y) Coordinate sampling grids used for the other outputs
-# (us, vs, ws) - (If available) reconstructed displacement fields at the surface
-# (usz, vsz, wsz) - (If applicable) normal - direction deformation gradient at the surface
-# (qx, qy, qz) - Reconstructed traction forces at the surface. <qz> will be set to zero if not reconstructed
+All function take the u-field object definied in uFieldType as their input
+An return:
+(x,y) Coordinate sampling grids used for the other outputs
+(us, vs, ws) - (If available) reconstructed displacement fields at the surface
+(usz, vsz, wsz) - (If applicable) normal - direction deformation gradient at the surface
+(qx, qy, qz) - Reconstructed traction forces at the surface. <qz> will be set to zero if not
+    reconstructed
+
+@author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
+"""
+
+
 
 import numpy as np
 
@@ -97,7 +104,7 @@ def FTTC(u):
     # pos = np.meshgrid(u.m[0], u.m[1], indexing='ij')
     us = ux[:, :, 0]
     vs = uy[:, :, 0]
-    xy, pos, vec, fnorm, f, urec, u, i_max, j_max, energy, force, Ftf, Fturec = \
+    xy, fnorm, f, urec, u, energy, force, Ftf, Fturec = \
         runFTTC.perform_FTTC(u.m[0], u.m[1], us, vs, u.dm, u.E, u.nu)  # pylint: disable=unused-variable
 
     zero = np.zeros_like(urec[0])
@@ -110,7 +117,7 @@ def FTTC3d(u):
     us = ux[:, :, 0]
     vs = uy[:, :, 0]
     ws = uz[:, :, 0]
-    xy, pos, vec, fnorm, f, urec, u, i_max, j_max, energy, force, Ftf, Fturec = \
+    xy, fnorm, f, urec, u, energy, force, Ftf, Fturec = \
         runFTTC3d.perform_FTTC(u.m[0], u.m[1], us, vs, ws, u.dm, u.E, u.nu)  # pylint: disable=unused-variable
 
     zero = np.zeros_like(urec[0])

@@ -1,12 +1,9 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Wed Dec 19 17:14:34 2018
+Small helper function to visualize layers
 
 @author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
 """
 
-# Small helper function to visualize layers
 
 import os
 import numpy as np
@@ -17,7 +14,10 @@ from scipy import integrate
 from .arrowplot import plot_with_arrows
 
 
-def plotLayer(imgLayer, xSpacing, ySpacing, title, cBarLabel=None, saveFig=True, folder="plots", savetitle=None):
+def plotLayer(
+        imgLayer, xSpacing, ySpacing, title, cBarLabel=None,
+        saveFig=True, folder="plots", savetitle=None
+):
     xLen = imgLayer.shape[0] * xSpacing
     yLen = imgLayer.shape[1] * ySpacing
 
@@ -28,11 +28,19 @@ def plotLayer(imgLayer, xSpacing, ySpacing, title, cBarLabel=None, saveFig=True,
 
     ax.axis('off')
 
-    im = ax.imshow(imgLayer.T, origin='lower', interpolation='bilinear', extent=extent)
+    if np.sum(np.abs(imgLayer)) == 0.0:  # Yes, only if this is really 0.0
+        # Special case of an empty plot
+        im = ax.imshow(
+            imgLayer.T, origin='lower', interpolation='bilinear', extent=extent, vmin=-10, vmax=10
+        )
+    else:
+        im = ax.imshow(imgLayer.T, origin='lower', interpolation='bilinear', extent=extent)
 
     patchLock = (xLen / 2 * 0.9, -yLen / 2 * 0.9)
 
-    rect = patches.Rectangle(patchLock, -20, yLen / 2 * 0.05, linewidth=1, edgecolor='none', facecolor='0.8')
+    rect = patches.Rectangle(
+        patchLock, -20, yLen / 2 * 0.05, linewidth=1, edgecolor='none', facecolor='0.8'
+    )
 
     # Add the patch to the Axes
     ax.add_patch(rect)
@@ -80,7 +88,10 @@ def plotLayer(imgLayer, xSpacing, ySpacing, title, cBarLabel=None, saveFig=True,
     plt.show()
 
 
-def plotLayerWithArrows(grid, xcomp, ycomp, zcomp, title, cBarLabel=None, saveFig=True, folder="plots", savetitle=None):
+def plotLayerWithArrows(
+        grid, xcomp, ycomp, zcomp, title, cBarLabel=None,
+        saveFig=True, folder="plots", savetitle=None
+):
     plt.rcParams.update({'font.size': 25})
 
     fig = plt.figure()
@@ -104,6 +115,7 @@ def plotLayerWithArrows(grid, xcomp, ycomp, zcomp, title, cBarLabel=None, saveFi
         fig.savefig('{}/plot-{}.pdf'.format(folder, savetitle))
     fig.canvas.set_window_title(title)
     plt.show()
+    plt.close()
 
 
 def plotLayerOld(imgLayer, xSpacing, ySpacing, title, cBarLabel=None, saveFig=True, folder="plots"):
@@ -115,7 +127,11 @@ def plotLayerOld(imgLayer, xSpacing, ySpacing, title, cBarLabel=None, saveFig=Tr
 def plotLayer4Save(imgLayer, xSpacing, ySpacing, title, cBarLabel=None, folder="plots"):
     plt.axis('off')
 
-    plt.imshow(imgLayer.T, origin='lower', interpolation='bilinear')
+    if np.sum(np.abs(imgLayer)) == 0.0:  # Yes, only if this is really 0.0
+        # Special case of an empty plot
+        plt.imshow(imgLayer.T, origin='lower', interpolation='bilinear', vmin=-10, vmax=10)
+    else:
+        plt.imshow(imgLayer.T, origin='lower', interpolation='bilinear')
     plt.autoscale()
     plt.tight_layout()
     cbar = plt.colorbar()

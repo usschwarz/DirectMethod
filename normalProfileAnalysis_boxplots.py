@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Analyses the effect of noise on different TFM strategies using the analysis for normal profiles
-This version samples more points and creates band plots rather them isolated points
+This version creates box_plot rather them banded plots
 
 @author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
 """
@@ -20,11 +20,16 @@ from src.TFM import tfmFunctions as tfmFn
 from src.TFM.uFieldType import load_from_ufile
 
 from src.utils import tomlLoad
+from src.utils.figure_setup import figure_setup
 from src.inputSim.fields import HertzBuilder
 
 pickle_name = "newNormalAnalysis.pickle"
 sample_count = 10
-noiseLevels = np.arange(10) * 0.5
+# noiseLevels = np.arange(10) * 0.5
+noiseLevels = np.array([1, 2, 3, 4])
+noiseLevelNames = ['low', 'medium-low', 'medium-high', 'high']
+# noiseLevels = np.array([1, 2, 5])
+# noiseLevelNames = ['low', 'medium', 'high']
 
 methods = [
     tfmFn.directTFM, tfmFn.squareFitTFM, tfmFn.divFreeFitTFM,
@@ -61,34 +66,57 @@ def evaluate_method(u, f_file, qfun):
     return Qx, Qy, Qz, QL2, bgn
 
 
-def plotStuff_no_legend(noiselevels, quant, errors, yLable, name=None, noshow=False):
+def _set_box_color(bp, color):
     """
-    Creates visualisations of the results
+    Fixes color of a boxplot
+
+    bp - Boxplot to color
+    color -color to use
+    """
+    plt.setp(bp['boxes'], color=color)
+    plt.setp(bp['whiskers'], color=color)
+    plt.setp(bp['caps'], color=color)
+    plt.setp(bp['medians'], color=color)
+    plt.setp(bp['fliers'], markeredgecolor=color)
+
+
+
+def plot_with_errorbars(
+        noiselevels, quant, errors, yLable, name=None, withLegend=False, noshow=False
+):
+    """
+    Create a visualization of the result using simple point marks
+    This should only be used in case of non overlapping datasets
 
     noiselevels - Noise Levels where data has been observed
     quant - 2D array containing mean value for the different plotlines for all noiselevels
     errors - 2D array containing error range for the different plotlines for all noiselevels
     yLable - Lable for y axis
     name - If present specifies name used to store plot
-    noshow - If set, plot is only created (an possibly saved), but not shown in a popup windows
+    withLegend - If specified, create additional plot that can contains the legend.
     """
+
     plt.close()
-    fig = plt.figure(figsize=[6.9, 4.5])
+    fig, ax = figure_setup()
     ns = noiselevels
-    ax = fig.add_axes([0.16, 0.14, 0.83, 0.84])
 
-    # _colors = plt.rcParams['axes.prop_cycle']
-    for (qt, er, i) in zip(quant[:-1], errors[:-1], range(len(quant)-1)):
-        ax.plot(ns, qt)
-        ax.fill_between(ns, qt - er, qt + er, alpha=0.3)
+    # Draw reference line if needed:
+    yref = quant[-1, 0]
+    ax.axhline(yref, color="black", linewidth=0.5)
 
-    ax.axhline(quant[-1, 0], color="black", linewidth=0.5)
+    for i, (qt, er) in enumerate(zip(quant[:-1], errors[:-1])):
+        ax.errorbar(x=ns, y=qt, yerr=er, fmt=':', ls="-", lw=0.5, marker="x", capsize=3, capthick=1)
+        #plt.plot(ns, qt)
+        # plt.fill_between(ns, qt - er, qt + er, alpha=0.3)
 
     ax.set_xlabel(r"$\sigma_N/<||u||>$")
     ax.set_ylabel(yLable)
 
+    if withLegend:
+        plt.legend()
+        # plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
+        #            ncol=2, mode="expand", borderaxespad=0.)
 
-    # plt.autoscale()
     # plt.tight_layout()
     if name is not None:
         fig.savefig('plots/{}.pdf'.format(name))
@@ -99,60 +127,74 @@ def plotStuff_no_legend(noiselevels, quant, errors, yLable, name=None, noshow=Fa
     plt.close()
 
 
-def plotStuff_with_legend(_noiselevels, quant, errors, yLable, name=None):
+def plot_with_boxplots(
+        noiselevels, data, yLable, name=None, withLegend=False, noshow=False
+):
     """
-    Plot visualisations of the results, with a legend.
-    This plot should only be used to identify lines correctly
+    Create a visualization of the results using boxplots
+    This should be used for overlapping datasets
 
     noiselevels - Noise Levels where data has been observed
-    quant - 2D array containing mean value for the different plotlines for all noiselevels
-    errors - 2D array containing error range for the different plotlines for all noiselevels
-    yLable - Lable for y axis
-    name - If present specifies name used to store plot
-    """
-    plt.close()
-
-    for (qt, er) in zip(quant, errors):
-        plt.plot(qt)
-
-    plt.xlabel(r"$\sigma_N/<||u||>$")
-    plt.ylabel(yLable)
-
-    plt.legend(methodnames,
-               bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
-               ncol=2, mode="expand", borderaxespad=0.)
-    # plt.autoscale()
-    plt.tight_layout()
-    if name is not None:
-        plt.savefig('plots/{}.pdf'.format(name))
-
-    plt.gcf().canvas.set_window_title(name)
-    plt.show()
-    plt.close()
-
-
-def plotStuff(noiselevels, quant, errors, yLable, name=None, withLegend=False):
-    """
-    Plot visualisations of the results, with a legend.
-    This plot should only be used to identify lines correctly
-
-    noiselevels - Noise Levels where data has been observed
-    quant - 2D array containing mean value for the different plotlines for all noiselevels
-    errors - 2D array containing error range for the different plotlines for all noiselevels
+    data - 3D array containing sampled data for the different
+            plotlines for all noiselevels (method, noiseleve, sample)
     yLable - Lable for y axis
     name - If present specifies name used to store plot
     withLegend - If specified, create additional plot that can contains the legend.
     """
-    if withLegend:
-        if name is not None:
-            ename = name + "-withLegend"
-        else:
-            ename = None
-        plotStuff_with_legend(noiselevels, quant, errors, yLable, ename)
-        plotStuff_no_legend(noiselevels, quant, errors, yLable, name, noshow=True)
-    else:
-        plotStuff_no_legend(noiselevels, quant, errors, yLable, name)
+    assert len(methodnames) == data.shape[0]
+    assert len(noiselevels) == data.shape[1]
 
+    plt.close()
+    fig, ax = figure_setup()
+
+    # Get a list of all colors
+    colors = list(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+    n_colors = len(colors)
+
+    def _get_color(num):
+        return colors[num % n_colors]
+
+    base_range = np.arange(len(noiselevels)) * (data.shape[0] + 2)
+    offset = np.arange(data.shape[0] - 1) - (data.shape[0] - 2) / 2
+
+    bplist = []
+
+    xmin = offset[0] - 1
+    xmax = len(noiselevels) * (data.shape[0] + 2) - (data.shape[0] - 1) / 2
+
+    # Draw reference line if needed:
+    yref = data[-1, 0, 0]
+    ax.axhline(y=yref, xmin=xmin, xmax=xmax, c='k', linewidth=0.5)
+
+    for i, _ in enumerate(methodnames[:-1]):
+        bp = ax.boxplot(data[i].T, positions=base_range + offset[i])
+        _set_box_color(bp, _get_color(i))
+        bplist.append(bp)
+
+    # Draw fictional lines to generate legend entries
+    if withLegend:
+        for i, meth in enumerate(methodnames[:-1]):
+            ax.plot([], c=_get_color(i), label=meth)
+
+    ax.set_xticks(base_range)
+    ax.set_xticklabels(noiseLevels)
+    ax.set_xlim(xmin, xmax)
+
+    ax.set_xlabel(r"$\sigma_N/<||u||>$")
+    ax.set_ylabel(yLable)
+
+    if withLegend:
+        plt.legend()
+        # plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
+        #            ncol=2, mode="expand", borderaxespad=0.)
+
+    if name is not None:
+        fig.savefig('plots/{}.pdf'.format(name))
+
+    if not noshow:
+        fig.canvas.set_window_title(name)
+        plt.show()
+    plt.close()
 
 
 def calc_fields(outfile_dir):
@@ -265,24 +307,34 @@ def plot_all(noshow: bool = True, plot_with_legend: bool = True):
 
     plt.rcParams.update({'font.size': 16})
 
-    Qx, QxE = dostat_1D(1e-6 * Qx_all)
-    Qy, QyE = dostat_1D(1e-6 * Qy_all)
-    Qz, QzE = dostat_1D(1e-6 * Qz_all)
+    # Qx, QxE = dostat_1D(1e-6 * Qx_all)
+    # Qy, QyE = dostat_1D(1e-6 * Qy_all)
+    # Qz, QzE = dostat_1D(1e-6 * Qz_all)
     QL2, QL2E = dostat_1D(1e-6 * QL2_all)
     BGN, BGNE = dostat_1D(1e-6 * BGN_all)
-    QA, QAE = dostat_2D(1e-6 * Qx_all, 1e-6 * Qy_all)
+    # QA, QAE = dostat_2D(1e-6 * Qx_all, 1e-6 * Qy_all)
+
+    QA_all = np.sqrt(Qx_all * Qx_all + Qy_all * Qy_all)
 
     print("Do plotting")
     if plot_with_legend:
-        plotStuff(noiseLevels, QA, QAE, "Total tangential force [µN]", "QT", withLegend=True)
-
-    plotStuff(noiseLevels, Qx, QxE, "Total x-force [µN]", "Qx")
-    plotStuff(noiseLevels, Qy, QyE, "Total y-force [µN]", "Qy")
-    plotStuff(noiseLevels, Qz, QzE, "Total z-force [µN]", "Qz")
-    plotStuff(noiseLevels, QA, QAE, "Total tangential force [µN]", "QT")
-    plotStuff(noiseLevels, QL2, QL2E, "Total difference in Norm [µN]", "PNorm")
-
-    plotStuff(noiseLevels, BGN, BGNE, "Background Noise Level", "BGN")
+        plot_with_boxplots(
+            noiseLevels, 1e-6 * QA_all, "Total tangential force [µN]", "QT+lengend",
+            withLegend=True
+        )
+    plot_with_boxplots(noiseLevels, 1e-6 * Qx_all, "Total x-force [µN]", "Qx", noshow=noshow)
+    plot_with_boxplots(noiseLevels, 1e-6 * Qy_all, "Total y-force [µN]", "Qy", noshow=noshow)
+    plot_with_boxplots(noiseLevels, 1e-6 * Qz_all, "Total z-force [µN]", "Qz", noshow=noshow)
+    plot_with_boxplots(
+        noiseLevels, 1e-6 * QA_all, "Total tangential force [µN]", "QT", noshow=noshow
+    )
+    plot_with_errorbars(
+        noiseLevels, QL2, QL2E, "Total difference in Norm [µN]", "PNorm", noshow=noshow
+    )
+    plot_with_errorbars(
+        noiseLevels, BGN, BGNE, "Background Noise Level", "BGN", noshow=noshow
+    )
+    print("Plotting done")
 
 
 def gen_all():

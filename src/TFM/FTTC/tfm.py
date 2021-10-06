@@ -1,17 +1,10 @@
-# Implementation of 2D FTTC related functions
+""" Implementation of 2D FTTC related functions """
 
 import numpy as np
 from scipy.interpolate import griddata, SmoothBivariateSpline
 from scipy.sparse import block_diag
 
 from . import numbafn
-
-
-def extract_deformation(deformation):
-    """ Extract deformation data into two arrays """
-    pos = deformation["pos"]
-    vec = deformation["vec"]
-    return pos.T, vec.T
 
 
 def interp_vec2grid(pos, vec, mesh_size, i_max=None, j_max=None):
@@ -99,7 +92,7 @@ def calculate_fourier_modes(mesh_size, i_max, j_max, lanczos_exp=1):
     return kx, ky, lanczosx, lanczosy
 
 
-def calculate_greens_function(E, s, kx, ky, i_max, j_max, mesh_size, pix_per_mu):
+def calculate_greens_function(E, s, kx, ky):
     """
     Calculate Greens function in Fourier space
     k is given in unit [1 / pix].
@@ -202,6 +195,7 @@ def calculate_energy(u, f, pix_per_mu, mesh_size):
     """ Determine energy stored in the given traction profile """
     l = mesh_size / pix_per_mu * 1e-6  # nodal distance in the rectangular grid in m**2 -> dA = l**2
     energy = (
+
             0.5 * l ** 2 * np.sum(u * f) * 1e-6 / pix_per_mu
     )  # u is given in pix -> additional 1e-6 / pix_per_mu, f is given in Pa
     return energy
@@ -216,18 +210,15 @@ def calculate_total_force(fnorm, pix_per_mu, mesh_size):
     return total_force
 
 
-def do_TFM(deformations, nr, mesh_size, E, nu, pix_per_mu, lam, lanczos_exp):
+def do_TFM(pos, vec, mesh_size, E, nu, pix_per_mu, lam, lanczos_exp):
     """ Reconstruct traction forces using a L2 regularized FTTC calculation """
-    pos, vec = extract_deformation(deformations[nr])
     grid_mat, u, i_max, j_max, i_bound_size, j_bound_size = interp_vec2grid(
         pos, vec, mesh_size
     )
     kx, ky, lanczosx, lanczosy = calculate_fourier_modes(
         mesh_size, i_max, j_max, lanczos_exp
     )
-    GFt = calculate_greens_function(
-        E, nu, kx, ky, i_max, j_max, mesh_size, pix_per_mu
-    )
+    GFt = calculate_greens_function(E, nu, kx, ky)
 
     G_inv_xx, G_inv_xy, G_inv_yy = calculate_Ginv(GFt, lam)
     Ftfx, Ftfy = reg_fourier_TFM_L2(u, G_inv_xx, G_inv_xy, G_inv_yy)
@@ -265,25 +256,21 @@ def do_TFM(deformations, nr, mesh_size, E, nu, pix_per_mu, lam, lanczos_exp):
         j_bound_size,
     )
 
-
-def svd(deformations, framenr, E, nu, mesh_size, pix_per_mu, lanczos_exp):
+def svd_block(pos, vec, E, nu, mesh_size, lanczos_exp):
     """
     Prepare svd representation of the FTTC problem that can be used to quickly calculate
     the GCV function
     """
-    pos, vec = extract_deformation(deformations[framenr])
     grid_mat, u, i_max, j_max, i_bound_size, j_bound_size = interp_vec2grid(pos, vec, mesh_size)
     kx, ky, lanczosx, lanczosy = calculate_fourier_modes(
         mesh_size, i_max, j_max, lanczos_exp
     )
-    GFt = calculate_greens_function(
-        E, nu, kx, ky, i_max, j_max, mesh_size, pix_per_mu
-    )
+    GFt = calculate_greens_function(E, nu, kx, ky)
     Ftu = np.fft.fft2(u).reshape(2, -1).T
     shape = GFt[0, 0].shape
 
     # Perform flattening in Fourier mode space along the way
-    U_h = np.empty((shape[0] * shape[1], 2, 2), dtype=np.complex64)
+    U_h = np.empty((shape[0] * shape[1], 2, 2), dtype=np.complex128)
     s_h = np.empty((shape[0] * shape[1], 2))
     for i in range(shape[0]):
         for j in range(shape[1]):
@@ -293,5 +280,5 @@ def svd(deformations, framenr, E, nu, mesh_size, pix_per_mu, lanczos_exp):
     # Convert to Output format.
     b = Ftu.flatten()  # = [u(k,l).T]
     s = s_h.flatten()  # = [s(k,l).T]
-    sparseU = block_diag(U_h, format="csr")
-    return sparseU, s, b
+    # sparseU = block_diag(U_h, format="csr")
+    return U_h, s, b

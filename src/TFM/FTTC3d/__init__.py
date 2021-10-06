@@ -1,1 +1,1 @@
-# FTTC Module contains code for 2D FTTC
+# FTTC Module contains code for 3D FTTC

@@ -1,4 +1,8 @@
-# Structure that bundels deformation field and materials data
+"""
+Defines uFieldData, a structure that bundels deformation field and materials data
+
+@author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
+"""
 
 import numpy as np
 
@@ -26,6 +30,9 @@ def dumpu2npz(filename, ux, uy, uz, uAbs, cc, dmz, dm, m, E, nu, nCritical):
 
 
 class uFieldData:
+    """
+    Structure that bundels deformation field and materials data
+    """
 
     def __init__(self, uDataFile):
         self.uDataFile = uDataFile

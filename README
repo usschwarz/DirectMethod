@@ -55,10 +55,15 @@ pointProfileAnalysis.py gen/calc/plot/all
 
 meshsizetest.py gen/calc/plot/all
     Analyses the effect of changing the mesh size using the analysis for point like tangential profiles.
+    'description.toml' should specify a profil consisting only of non-overlapping tangential adhesions
     gen  - generate deformation data with different mesh sizes using 'description.toml'
     calc - calculate traction fields and extract metrics for all mesh sizes
     plot - create plots of the different metrics
     all  - Perform all of the above in a single run
+
+The scripts normalProfileAnalysis.py, pointProfileAnalysis.py, meshsizetest.py also accept an
+argument --use-cached on calc and all to use the cached deformation fields for
+force metric calculation.
 
 convergence_test.py see below
     Tests the convergence of the divergence removal scheme
@@ -69,6 +74,8 @@ convergence_test.py see below
 
     dcsConvergenceTest.py
         If a "convergence_test.pickle" file exists, plot the results
+
+
 
 The gcv algorithm (TFM/FTTC/gcv.py and TFM/FTTC/gcv.py) is based on the Matlab scripts "regtools" by Hansen
 (P. C. Hansen, Regularization Tools Version 4.0 for Matlab 7.3, Numerical Algorithms, 46 (2007), pp. 189-194).

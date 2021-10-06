@@ -21,6 +21,18 @@ from src.TFM import tfmFunctions
 from src.TFM.resultEval import getQGes, getDipoleDirect, getQiGes
 from src.utils.plotLayer import plotLayerWithArrows
 
+from src.utils.tomlLoad import loadAdheasionSites
+from src.inputSim.fields.HertzBuilder import get_q_hertz_pattern
+
+
+def get_reference_traction(grid):
+    """ Returns the reference field sampled at a given grid """
+    x, y = grid
+    pointList = loadAdheasionSites()
+    qx, qy, qz = get_q_hertz_pattern(pointList)
+    q = (qx(x, y), qy(x, y), qz(x, y))
+    return q
+
 
 def get_tfm_func(name):
     """ Selects and return matching method for TFM mode specification """
@@ -81,6 +93,7 @@ def plotDiagSection(imgLayer, xySpacing, title, antiDiag=False, saveFig=True, fo
     saveFig - If set, save plot to disk
     folder - Folder to save plot to.
     """
+    plt.close()
     plt.rcParams.update({'font.size': 25})
 
     lParam, dFeld, secname = getDiagData(imgLayer, xySpacing, antiDiag)
@@ -214,6 +227,12 @@ def main():
     print("QVector = ({},{},{}) Pa*µm^2".format(Qx, Qy, Qz))
     print("Dipol: ", eigval, eigvec, alpha)
     print("QzS: ", QzS)
+
+    qx_ref, qy_ref, qz_ref = get_reference_traction(grid)
+
+    plotDiagSection(qx - qx_ref, uCurr.dm, 'Δ qx_{}'.format(TFM_type))
+    plotDiagSection(qy - qy_ref, uCurr.dm, 'Δ qy_{}'.format(TFM_type))
+    plotDiagSection(qz - qz_ref, uCurr.dm, 'Δ p_{}'.format(TFM_type))
 
 
 exit(main())

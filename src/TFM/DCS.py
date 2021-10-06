@@ -1,17 +1,13 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Mon Dec 10 17:03:31 2018
+Implement the algorithm from
+http://ltces.dem.ist.utl.pt/lxlaser/lxlaser2016/finalworks2016/papers/03.14_2_104paper.pdf
+and
+Wang, C., Gao, Q., Wei, R. et al.
+Weighted divergence correction scheme and its fast implementation.
+Exp Fluids 58, 44 (2017). https://doi.org/10.1007/s00348-017-2307-0
 
 @author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
 """
-
-# Implement the algorithm from 
-# http://ltces.dem.ist.utl.pt/lxlaser/lxlaser2016/finalworks2016/papers/03.14_2_104paper.pdf
-# and
-# Wang, C., Gao, Q., Wei, R. et al.
-# Weighted divergence correction scheme and its fast implementation.
-# Exp Fluids 58, 44 (2017). https://doi.org/10.1007/s00348-017-2307-0
 
 import numpy as np
 from numba import vectorize
@@ -230,7 +226,6 @@ def mean_norm_voigt(mvoigt):
 
     mxx, myy, mzz, myz, mxz, mxy = mvoigt
     mnorm = np.sqrt(mxx ** 2 + myy ** 2 + mzz ** 2 + 2 * mxy ** 2 + 2 * mxz ** 2 + 2 * mzz ** 2)
-    print("DBG: mnorm", np.mean(mnorm))
     return float(np.mean(mnorm))
 
 

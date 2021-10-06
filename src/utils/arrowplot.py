@@ -1,3 +1,9 @@
+"""
+Helper routines for output plotting
+
+@author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
@@ -19,7 +25,13 @@ def plot_with_arrows(fig, xRng, yRng, fx, fy, fz, cbar_label="Stress [Pa]"):
     ax1.set_xlim((xRng[0], xRng[-1]))
     ax1.set_ylim((yRng[0], yRng[-1]))
     ax1.axis('off')
-    im = ax1.imshow(fz.T, origin="lower", extent=extent, interpolation="bilinear")
+    if np.sum(np.abs(fz)) == 0.0:  # Yes, only if this is really 0.0
+        # Special case of an empty plot
+        im = ax1.imshow(
+            fz.T, origin="lower", extent=extent, interpolation="bilinear", vmin=-10, vmax=10
+        )
+    else:
+        im = ax1.imshow(fz.T, origin="lower", extent=extent, interpolation="bilinear")
 
     # scalebar = AnchoredSizeBar(ax1.transData,20,'20 µm','lower right')
     scalebar = ScaleBar(xRng[1] - xRng[0], 'um', location='lower right', box_alpha=0., color='0.8', scale_loc='top')

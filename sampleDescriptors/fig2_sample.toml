@@ -1,0 +1,52 @@
+# This example describes a situation with 6 adheasion sites pulling in and a nucleus pushing down
+[dataset]
+name = "six_ahesions_cell"
+
+[substrate]
+E = 10000.0 # 10 kPa
+nu = 0.5
+
+[image]
+spacing_xy = 0.4 # µm
+spacing_z = 0.8 # µm
+
+[simulation]
+n_points_xy = 128
+n_points_z = 6
+
+[adheasion.center]
+type = "indentor"
+F = 30 # nN Total force per adheasion site
+F_unit = "nN"
+a = 6  # 8 µm Size of the indented area
+pos = [0,0] # Dipole center (µm,µm)
+
+[adheasion.ul_to_lr_stressfiber]
+type = "dipole"
+F = 10 # 10 nN Total tangental force per adheasion site
+Fz = -10 # 10 nN Normal force at the adhesion (shared by both sites)
+F_unit = "nN"
+d = 25  # µm Distance between counteracting adheasion sites
+phi = 150 # degrees angle
+a = 2   # µm Radius of adheasion site
+pos = [0,0]
+
+[adheasion.vertical_stressfiber]
+type = "dipole"
+F = 10 # 10 nN Total tangental force per adheasion site
+Fz = -10 # 10 nN Normal force at the adhesion (shared by both sites)
+F_unit = "nN"
+d = 25  # µm Distance between counteracting adheasion sites
+phi = 90 # degrees angle
+a = 2   # µm Radius of adheasion site
+pos = [0,0]
+
+[adheasion.ur_to_ll_stressfiber]
+type = "dipole"
+F = 10 # 10 nN Total tangental force per adheasion site
+Fz = -10 # 10 nN Normal force at the adhesion (shared by both sites)
+F_unit = "nN"
+d = 25  # µm Distance between counteracting adheasion sites
+phi = 30 # degrees angle
+a = 2   # µm Radius of adheasion site
+pos = [0,0]

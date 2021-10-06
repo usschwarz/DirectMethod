@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Apr 27 02:38:22 2019
+Generates noised sample fields form an unnoised one.
+
+Call signature:
+python generateNoised.py referencefilename
+
+Produces replicas of referencefilename where various types of noise have been added.
 
 @author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
 """
 
-# Signature generateNoised.py referencefileName
 
-# Produces replicas of referencefileName where various types of noise have been added.
 
 import sys
 import os

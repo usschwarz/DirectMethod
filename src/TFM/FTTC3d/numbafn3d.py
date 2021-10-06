@@ -1,4 +1,4 @@
-# Some helper functions implemented in numba
+""" Some helper functions implemented in numba """
 
 import numpy as np
 import numba

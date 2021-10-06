@@ -1,4 +1,4 @@
-# Implementation of 3D FTTC related functions
+""" Implementation of 3D FTTC related functions """
 
 import numpy as np
 from scipy.interpolate import griddata, SmoothBivariateSpline
@@ -14,7 +14,7 @@ def extract_deformation(deformation):
     return pos.T, vec.T
 
 
-def interp_vec2grid(pos, vec, mesh_size, i_max = None, j_max = None):
+def interp_vec2grid(pos, vec, mesh_size, i_max=None, j_max=None):
     """ Interpolate pos and vec data to a finer, regular grid """
     max_corner = np.array([np.max(pos[0]), np.max(pos[1])])
     min_corner = np.array([np.min(pos[0]), np.min(pos[1])])
@@ -26,14 +26,17 @@ def interp_vec2grid(pos, vec, mesh_size, i_max = None, j_max = None):
 
     i_max = np.int64(i_max)
     j_max = np.int64(j_max)
-    X, Y = np.meshgrid(min_corner[0] + np.arange(0.5, i_max, 1) * mesh_size,
-                       min_corner[1] + np.arange(0.5, j_max, 1) * mesh_size)
+    X, Y = np.meshgrid(
+        min_corner[0] + np.arange(0.5, i_max, 1) * mesh_size,
+        min_corner[1] + np.arange(0.5, j_max, 1) * mesh_size
+    )
     grid_mat = np.array([X, Y])
     ### INTERPOLATION ###
-    u = np.array(
-        [griddata((pos[0].ravel(), pos[1].ravel()), vec[0].ravel(), (grid_mat[0], grid_mat[1]), method='cubic'),
-         griddata((pos[0].ravel(), pos[1].ravel()), vec[1].ravel(), (grid_mat[0], grid_mat[1]), method='cubic'),
-         griddata((pos[0].ravel(), pos[1].ravel()), vec[2].ravel(), (grid_mat[0], grid_mat[1]), method='cubic')])
+    u = np.array([
+        griddata((pos[0].ravel(), pos[1].ravel()), vec[0].ravel(), (grid_mat[0], grid_mat[1]), method='cubic'),
+        griddata((pos[0].ravel(), pos[1].ravel()), vec[1].ravel(), (grid_mat[0], grid_mat[1]), method='cubic'),
+        griddata((pos[0].ravel(), pos[1].ravel()), vec[2].ravel(), (grid_mat[0], grid_mat[1]), method='cubic')
+    ])
     u = extrapolate_u(grid_mat, u)
 
     i_bound_size, j_bound_size = 0, 0
@@ -51,13 +54,25 @@ def extrapolate_u(grid_mat, u):
     valid_dis = displacements[np.where(~mask)]  # pylint: disable=unsubscriptable-object
     ### EXTRAPOLATION ###
     try:
-        sbs_0 = SmoothBivariateSpline(valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 0], kx=3, ky=3)
-        sbs_1 = SmoothBivariateSpline(valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 1], kx=3, ky=3)
-        sbs_2 = SmoothBivariateSpline(valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 2], kx=3, ky=3)
+        sbs_0 = SmoothBivariateSpline(
+            valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 0], kx=3, ky=3
+        )
+        sbs_1 = SmoothBivariateSpline(
+            valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 1], kx=3, ky=3
+        )
+        sbs_2 = SmoothBivariateSpline(
+            valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 2], kx=3, ky=3
+        )
     except:
-        sbs_0 = SmoothBivariateSpline(valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 0], kx=1, ky=1)
-        sbs_1 = SmoothBivariateSpline(valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 1], kx=1, ky=1)
-        sbs_2 = SmoothBivariateSpline(valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 2], kx=1, ky=1)
+        sbs_0 = SmoothBivariateSpline(
+            valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 0], kx=1, ky=1
+        )
+        sbs_1 = SmoothBivariateSpline(
+            valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 1], kx=1, ky=1
+        )
+        sbs_2 = SmoothBivariateSpline(
+            valid_pos[:, 0], valid_pos[:, 1], valid_dis[:, 2], kx=1, ky=1
+        )
 
     u[0][np.isnan(u[0])] = sbs_0.ev(invalid_pos[:, 0], invalid_pos[:, 1])
     u[1][np.isnan(u[1])] = sbs_1.ev(invalid_pos[:, 0], invalid_pos[:, 1])
@@ -79,31 +94,33 @@ def calculate_fourier_modes(mesh_size, i_max, j_max, lanczos_exp=1):
     return kx, ky, lanczosx, lanczosy
 
 
-def calculate_greens_function(E, s, kx, ky, i_max, j_max, mesh_size, pix_per_mu, z = 0.0):
+def calculate_greens_function(E, nu, kx, ky, z=0.0):
     """
     Calculate Greens function in Fourier space
-    k is given in unit [1 / pix].
-    z is given in unit [pix]
+    Units of k and z must be consistent:
+    k is given in unit [1 / unit].
+    z must be given in unit [unit]
+
+    E must be the same unit as the traction field
     """
-    V = 2 * (1 + s) / E
+    V = 2 * (1 + nu) / E
     kx_sq = kx ** 2
     ky_sq = ky ** 2
     kabs = np.sqrt(kx_sq + ky_sq)
     kabs_sq = kx_sq + ky_sq
-    h = 2. * s + z * kabs
 
-    # otherwise (kx**2 + ky**2)**(-1/2.) will be inf
-    kabs[0, 0] = 1.
+    kabs[0, 0] = 1.0  # we assume that all the sources of traction are in the field of view
+
+    b = nu + z * kabs / 2.0
 
     GFt = V / (2 * kabs ** 3) * np.exp(-kabs * z) * np.array([
-        [2 * kabs_sq - h * kx_sq, -h * kx * ky, (1 - h) * 1j * kabs * kx],
-        [-h * kx * ky, 2 * kabs_sq - h * kx_sq, (1 - h) * 1j * kabs * ky],
-        [-(1 - 2 * s + kabs * z) * 1j * kabs * kx, -(1 - 2 * s + kabs * z) * 1j * kabs * ky,
-         (2 - 2 * s + kabs * z) * kabs_sq]
+        [2 * kabs_sq - 2 * b * kx_sq, -2 * b * kx * ky, (1 - 2 * b) * 1j * kabs * kx],
+        [-2 * b * kx * ky, 2 * kabs_sq - 2 * b * kx_sq, (1 - 2 * b) * 1j * kabs * ky],
+        [-(1 - 2 * nu + kabs * z) * 1j * kabs * kx, -(1 - 2 * nu + kabs * z) * 1j * kabs * ky,
+         (2 - 2 * nu + kabs * z) * kabs_sq]
     ])
 
-    # we assume that all the sources of traction are in the field of view
-    GFt[:, :, 0, 0] = 0.0
+    GFt[:, :, 0, 0] = 0.0  # we assume that all the sources of traction are in the field of view
     return GFt
 
 
@@ -122,7 +139,7 @@ def reg_fourier_TFM_L2(u, Ginv):
 
     Ftux = np.fft.fft2(u[0])
     Ftuy = np.fft.fft2(u[1])
-    Ftuz = np.fft.fft2(u[1])
+    Ftuz = np.fft.fft2(u[2])
     Ftfx = _comp_i(Ftux, Ftuy, Ftuz, Ginv[0])
     Ftfy = _comp_i(Ftux, Ftuy, Ftuz, Ginv[1])
     Ftfz = _comp_i(Ftux, Ftuy, Ftuz, Ginv[2])
@@ -137,8 +154,8 @@ def reconstruct_displacement_field(GFt, Ftfx, Ftfy, Ftfz, lanczosx, lanczosy):
         return GFt_ix * Ftfx + GFt_iy * Ftfy + GFt_iz * Ftfz
 
     Ftux_rec = _comp_i(Ftfx, Ftfy, Ftfz, GFt[0])
-    Ftuy_rec = _comp_i(Ftfx, Ftfy, Ftfz, GFt[0])
-    Ftuz_rec = _comp_i(Ftfx, Ftfy, Ftfz, GFt[0])
+    Ftuy_rec = _comp_i(Ftfx, Ftfy, Ftfz, GFt[1])
+    Ftuz_rec = _comp_i(Ftfx, Ftfy, Ftfz, GFt[2])
     ux_rec = np.fft.ifft2(lanczosx * Ftux_rec)
     uy_rec = np.fft.ifft2(lanczosy * Ftuy_rec)
     uz_rec = np.fft.ifft2(Ftuz_rec)
@@ -189,12 +206,11 @@ def calculate_total_force(fnorm, pix_per_mu, mesh_size):
     return total_force
 
 
-def do_TFM(deformations, nr, mesh_size, E, nu, pix_per_mu, lam, lanczos_exp):
+def do_TFM(pos, vec, mesh_size, E, nu, pix_per_mu, lam, lanczos_exp):
     """ Reconstruct traction forces using a L2 regularized FTTC calculation """
-    pos, vec = extract_deformation(deformations[nr])
     grid_mat, u, i_max, j_max, i_bound_size, j_bound_size = interp_vec2grid(pos, vec, mesh_size)
     kx, ky, lanczosx, lanczosy = calculate_fourier_modes(mesh_size, i_max, j_max, lanczos_exp)
-    GFt = calculate_greens_function(E, nu, kx, ky, i_max, j_max, mesh_size, pix_per_mu)
+    GFt = calculate_greens_function(E, nu, kx, ky)
 
     G_inv = calculate_Ginv(GFt, lam)
     Ftfx, Ftfy, Ftfz = reg_fourier_TFM_L2(u, G_inv)
@@ -207,15 +223,14 @@ def do_TFM(deformations, nr, mesh_size, E, nu, pix_per_mu, lam, lanczos_exp):
     return pos, vec, fnorm, f, urec, u, i_max, j_max, energy, force, Ftf, Fturec, i_bound_size, j_bound_size
 
 
-def svd(deformations, framenr, E, nu, mesh_size, pix_per_mu, lanczos_exp):
+def svd(pos, vec, E, nu, mesh_size, lanczos_exp):
     """
     Prepare svd representation of the FTTC problem that can be used to quickly calculate
     the GCV function
     """
-    pos, vec = extract_deformation(deformations[framenr])
     grid_mat, u, i_max, j_max, i_bound_size, j_bound_size = interp_vec2grid(pos, vec, mesh_size)
     kx, ky, lanczosx, lanczosy = calculate_fourier_modes(mesh_size, i_max, j_max, lanczos_exp)
-    GFt = calculate_greens_function(E, nu, kx, ky, i_max, j_max, mesh_size, pix_per_mu)
+    GFt = calculate_greens_function(E, nu, kx, ky)
 
     # Deleate large data object
     del grid_mat, kx, ky
@@ -234,5 +249,5 @@ def svd(deformations, framenr, E, nu, mesh_size, pix_per_mu, lanczos_exp):
     # Convert to Output format.
     b = Ftu.flatten()  # = [u(k,l).T]
     s = s_h.flatten()  # = [s(k,l).T]
-    sparseU = block_diag(U_h, format="csr")
-    return sparseU, s, b
+    # sparseU = block_diag(U_h, format="csr")
+    return U_h, s, b

@@ -3,18 +3,23 @@
 name = "hertzIndentor"
 
 [substrate]
-E = 10.0 # = 10 kPa
+E = 10.0 # kPa
 E_unit = "kPa"
 nu = 0.45
 
 [image]
-micronsPerPixel=0.1 # µm
-layerDistance=0.25
+spacing_xy = 0.8 # µm
+spacing_z = 2.0 # µm
+
+# micronsPerPixel=0.1 # µm
+# layerDistance=0.25 # µm
 
 [simulation]
-# This information
-numberOfLayers= 80
-xyPix = 1024
+n_points_xy = 128
+n_points_z = 10
+
+# numberOfLayers= 80
+# xyPix = 1024
 
 [adheasion.hertzIndentor]
 type = "indentor"

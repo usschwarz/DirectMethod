@@ -1,13 +1,18 @@
-# This file is used to load a descriptor toml and return it as a pointList
+"""
+This file is used to load a descriptor toml and return it as a pointList
 
-# For reference:
-# Point List structure
-# [(x,y,a,Qx,Qy,Qz)]
-#  x,y     Center of adheasion coordinates (in µm)
-#  a       Size of traction area (in µm)
-#  Qx      Total traction force applied in x (tangential) direction (in Pa µm^2)
-#  Qy      Total traction force applied in y (tangential) direction (in Pa µm^2)
-#  Qz      Total traction force applied in z (normal)     direction (in Pa µm^2)
+For reference:
+Point List structure
+[(x,y,a,Qx,Qy,Qz)]
+ x,y     Center of adheasion coordinates (in µm)
+ a       Size of traction area (in µm)
+ Qx      Total traction force applied in x (tangential) direction (in Pa µm^2)
+ Qy      Total traction force applied in y (tangential) direction (in Pa µm^2)
+ Qz      Total traction force applied in z (normal)     direction (in Pa µm^2)
+
+@author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
+"""
+
 
 import toml
 import math
@@ -79,8 +84,15 @@ def loadDataDescription(tomlpath="description.toml", silent=False):
         E = float(substrate['E'])
         nu = float(substrate['nu'])
 
-        micronsPerPixel = float(desc_obj['image']['micronsPerPixel'])
-        dLayers = float(desc_obj['image']['layerDistance'])
+        if 'spacing_xy' in desc_obj['image']:
+            spacing_xy = float(desc_obj['image']['spacing_xy'])
+            spacing_z = float(desc_obj['image']['spacing_z'])
+        else:
+            micronsPerPixel = float(desc_obj['image']['micronsPerPixel'])
+            dLayers = float(desc_obj['image']['layerDistance'])
+
+            spacing_xy = 8 * micronsPerPixel
+            spacing_z = 8 * dLayers
     except KeyError:
         print("toml file '{}' couldn't be read successfully.".format(tomlpath))
         raise
@@ -88,7 +100,7 @@ def loadDataDescription(tomlpath="description.toml", silent=False):
     unit = substrate.setdefault('E_unit', 'Pa')
     E *= get_unit_to_Pa(unit)
 
-    return fname, E, nu, micronsPerPixel, dLayers
+    return fname, E, nu, spacing_xy, spacing_z
 
 
 def loadSimulationData(tomlpath="description.toml", silent=False):
@@ -99,14 +111,27 @@ def loadSimulationData(tomlpath="description.toml", silent=False):
 
     try:
         simulation = desc_obj['simulation']
-        nLayers = float(desc_obj['simulation']['numberOfLayers'])
-        xyPix = float(desc_obj['simulation']['xyPix'])
+        if 'n_points_z' in desc_obj['simulation']:
+            n_points_z = float(desc_obj['simulation']['n_points_z'])
+            n_points_xy = float(desc_obj['simulation']['n_points_xy'])
+        else:
+            nLayers = float(desc_obj['simulation']['numberOfLayers'])
+            xyPix = float(desc_obj['simulation']['xyPix'])
+
+            if nLayers % 8 == 0:
+                n_points_z = nLayers // 8
+            else:
+                n_points_z = nLayers / 8
+
+            if xyPix % 8 == 0:
+                n_points_xy = xyPix // 8
+            else:
+                n_points_xy = xyPix / 8
+
     except KeyError:
         print("toml file '{}' couldn't be read successfully.".format(tomlpath))
         raise
-
-    NBeads = simulation.setdefault('NBeads', 10)
-    return nLayers, xyPix, NBeads
+    return n_points_xy, n_points_z
 
 
 def loadMeshSizeRange(tomlpath="description.toml", silent=False):
@@ -116,12 +141,12 @@ def loadMeshSizeRange(tomlpath="description.toml", silent=False):
     desc_obj = toml.load(tomlpath)
 
     try:
-        xypixmin = float(desc_obj['meshsizetest']['xyPixMin'])
-        xypixmax = float(desc_obj['meshsizetest']['xyPixMax'])
+        n_points_xy_min = float(desc_obj['meshsizetest']['n_points_xy_min'])
+        n_points_xy_max = float(desc_obj['meshsizetest']['n_points_xy_max'])
     except KeyError:
         print("toml file '{}' couldn't be read successfully.".format(tomlpath))
         raise
-    return xypixmin, xypixmax
+    return n_points_xy_min, n_points_xy_max
 
 
 def loadAdheasionSites(tomlpath="description.toml", silent=False):
@@ -233,11 +258,12 @@ def _h_loadAdheasionSites(tomlpath, descrname, silent, optional):
 
 
 if __name__ == "__main__":
-    fname, E, nu, micronsPerPixel, dLayers = loadDataDescription("utils/testdescriptor.toml")
-    print("fname={}, E = {}, nu = {}, um = {}, dLayers = {}".format(fname, E, nu, micronsPerPixel, dLayers))
+    fname, E, nu, spacing_xy, spacing_z = loadDataDescription("utils/testdescriptor.toml")
+    print("fname={}, E = {}, nu = {}, sxy = {}, sz = {}".format(
+        fname, E, nu, spacing_xy, spacing_z))
 
-    nLayers, xyPix, NBeads = loadSimulationData("utils/testdescriptor.toml")
-    print("nLayers = {}, xyPix = {}, NBeads = {}".format(nLayers, xyPix, NBeads))
+    xyPix, nLayers, scale = loadSimulationData("utils/testdescriptor.toml")
+    print("nLayers = {}, xyPix = {}".format(nLayers, xyPix))
 
     pointList = loadAdheasionSites("utils/testdescriptor.toml")
     print("Adheasion Sites", pointList)

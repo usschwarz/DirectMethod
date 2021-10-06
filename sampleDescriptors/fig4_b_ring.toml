@@ -3,17 +3,23 @@
 name = "hertzRing"
 
 [substrate]
-E = 3.0 # kPa
-E_unit = "kPa" # The E unit can also be specified explicitly
+E = 3.0 # 50 kPa
+E_unit = "kPa"
 nu = 0.45
 
 [image]
-micronsPerPixel=0.1 # µm
-layerDistance=0.25
+spacing_xy = 0.8 # µm
+spacing_z = 2.0 # µm
+
+# micronsPerPixel=0.1 # µm
+# layerDistance=0.25 # µm
 
 [simulation]
-numberOfLayers= 80
-xyPix = 2048
+n_points_xy = 256
+n_points_z = 10
+
+# numberOfLayers = 80
+# xyPix = 2048
 
 [adheasion.inner]
 type = "indentor"

@@ -11,18 +11,19 @@ nu = 0.45
 
 [image]
 # This sections, describes the sampling rates of the simulated images.
-micronsPerPixel=0.1 # µm
-layerDistance=0.5
-
-[meshsizetest]
-# This section is only used by the meshsizetest and describes the image sizes used
-xyPixMin = 256
-xyPixMax = 1024
+spacing_xy=0.8 # µm
+spacing_z=4.0 # µm
 
 [simulation]
 # This section describes the extent of the image
-numberOfLayers= 32
-xyPix = 512
+n_points_xy = 64    # Number of sampling points in x and y direction
+n_points_z = 4      # Number of sampling points in z direction
+
+[meshsizetest]
+# This section is only used by the meshsizetest and describes the image sizes used.
+# It describes the minimal and maximal value n_points_xy should take
+n_points_xy_min = 32
+n_points_xy_min = 128
 
 # You can compose you traction profile by specifiying multiple adhesion components. The final
 # profile will be a superposition of all the components specified. Different components can be

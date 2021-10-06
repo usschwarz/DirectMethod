@@ -1,4 +1,4 @@
-# Single Call implementation of regFTTC in 2D
+""" Single Call implementation of regFTTC in 3D """
 
 import numpy as np
 
@@ -13,11 +13,13 @@ if __name__ == "__main__":  # This is Python
 
     # Import parent dir to ensure module-like import
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
+    # noinspection PyUnresolvedReferences
     from FTTC3d import tfm3d as tfm
+    # noinspection PyUnresolvedReferences
     from FTTC3d import gcv
 else:
     from . import tfm3d as tfm
-    from ..FTTC3d import gcv
+    from ..FTTC3d import gcv_block
 
 
 def plot_gcv_curve(lam, minG, lams, Gs):
@@ -48,16 +50,15 @@ def plot_gcv_curve(lam, minG, lams, Gs):
 
 def create_gcv_par(simdata, lamlow, lamhigh, lamcount=20):
     """ Determines FTTC regularization parameter using GCV  """
-    deformations, E, nu, mesh_size, pix_per_mu, lanczos_exp = simdata
+    pos0, vec0, E, nu, mesh_size, pix_per_mu, lanczos_exp = simdata
     lambdarange = np.logspace(lamlow, lamhigh, lamcount)
-    sparseU, s, b = tfm.svd(deformations, 0, E, nu, mesh_size, pix_per_mu, lanczos_exp)
-    reg_min, minG, G, _reg_param = gcv.gcv(sparseU, s, b, lambdarange, plot=False)
+    blockU, s, b = tfm.svd(pos0, vec0, E, nu, mesh_size, lanczos_exp)
+    # Reg gcv can find points outside of this range as well
+    reg_min, minG, G, _reg_param = gcv_block.gcv_blockdiag(blockU, s, b, lambdarange, plot=False)
     lam = reg_min
     print('GCV minimum at lambda =', lam)
     # plot_gcv_curve(lam, minG, lambdarange, G)
     return lam
-
-
 
 
 def perform_FTTC(xR, yR, u, v, w, dm, E, nu, lanczos_exp=1, set_lam=None):
@@ -70,9 +71,8 @@ def perform_FTTC(xR, yR, u, v, w, dm, E, nu, lanczos_exp=1, set_lam=None):
 
     xpix, ypix = np.meshgrid(xpixR, ypixR, indexing='ij')
 
-    pos = np.array([xpix.flatten(), ypix.flatten()])
-    vec = np.array([u.flatten(), v.flatten(), w.flatten()])
-    deformations = [{'pos': pos.T, 'vec': vec.T}]
+    pos0 = np.array([xpix.flatten(), ypix.flatten()])
+    vec0 = pix_per_mu * np.array([u.flatten(), v.flatten(), w.flatten()])
 
     # If lam is not known find one using gcv
     if set_lam is None:
@@ -81,20 +81,20 @@ def perform_FTTC(xR, yR, u, v, w, dm, E, nu, lanczos_exp=1, set_lam=None):
         lamhigh = np.log10(lamguess) + 3.0
         lamcount = 50
 
-        simData = deformations, E, nu, mesh_size, pix_per_mu, lanczos_exp
+        simData = pos0, vec0, E, nu, mesh_size, pix_per_mu, lanczos_exp
         lam = create_gcv_par(simData, lamlow, lamhigh, lamcount)
     else:
         lam = set_lam
 
     # Returns:
     pos, vec, fnorm, f, urec, u, i_max, j_max, energy, force, Ftf, Fturec, _, _ = \
-        tfm.do_TFM(deformations, 0, mesh_size, E, nu, pix_per_mu, lam, lanczos_exp)
+        tfm.do_TFM(pos0, vec0, mesh_size, E, nu, pix_per_mu, lam, lanczos_exp)
 
     x = np.reshape(pos[0], (i_max, j_max)).T / pix_per_mu
     y = np.reshape(pos[1], (i_max, j_max)).T / pix_per_mu
 
     # raise RuntimeError
-    return (x, y), pos, vec, fnorm, f, urec, u, i_max, j_max, energy, force, Ftf, Fturec
+    return (x, y), fnorm, f, urec, u, energy, force, Ftf, Fturec
 
 
 if __name__ == "__main__":

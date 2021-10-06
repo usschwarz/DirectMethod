@@ -1,12 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Thu Apr 25 09:28:59 2019
+Calculate field properties
 
 @author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
 """
-
-# Calculate field properties
 
 from scipy import integrate
 import numpy as np

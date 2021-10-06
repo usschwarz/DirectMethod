@@ -1,6 +1,10 @@
-# 5 Point gradient gradient function
-# Formulae can be found by fitting a 5th order polynomial using the value at 5 equally distanced sampling points
-#
+"""
+5 Point gradient gradient function
+Formulae can be found by fitting a 5th order polynomial using
+the value at 5 equally distanced sampling points
+
+@author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
+"""
 
 import numpy as np
 

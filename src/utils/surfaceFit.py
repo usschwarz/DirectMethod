@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Wed Dec 12 17:23:58 2018
+Function used to find surface gradients
 
 @author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
 """
@@ -11,9 +9,6 @@ import numpy as np
 from scipy import integrate
 
 from .diffSquareFit import gradientFitArea
-
-
-# All directTFM Routines here
 
 
 def fit4PointFit2zero(f, zSpacing, z0=0):

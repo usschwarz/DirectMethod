@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Wed Dec 12 17:26:56 2018
+Functions for stress and surface traction calculation
 
 @author: Johannes Blumberg (johannes.blumberg@bioquant.uni-heidelberg.de)
 """
@@ -91,8 +89,7 @@ def linearStress(mu: float, nu: float, F: np.ndarray) -> VoigtMatNdarrayTuple:
 
     if isclose(nu, 0.5):
         # In the incompressible case we can make use of div(u) = 0
-        # to avoide the divergent term nu/(1-2*nu)
-        # Actually this should be checked
+        # to avoid the divergent term nu/(1-2*nu)
         sgxx = 2 * mu * uxx
         sgyy = 2 * mu * uyy
         sgzz = 2 * mu * uzz
